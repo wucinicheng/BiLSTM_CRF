@@ -275,8 +275,8 @@ for sentence, tags in training_data:
 
 tag_to_ix = {"B-PER": 0, "I-PER": 1, "B-LOC": 2, "I-LOC": 3, "B-ORG": 4, "I-ORG": 5, "O": 6, START_TAG: 7, STOP_TAG: 8}
 
-# model = BiLSTM_CRF(len(word_to_ix), tag_to_ix, EMBEDDING_DIM, HIDDEN_DIM)  # (25,tag_to_ix, 5, 4 )
-model = torch.load("./model/model-66.pth")
+model = BiLSTM_CRF(len(word_to_ix), tag_to_ix, EMBEDDING_DIM, HIDDEN_DIM)  # (25,tag_to_ix, 5, 4 )
+# model = torch.load("./model/model-66.pth")
 # 随机梯度进行优化
 optimizer = optim.SGD(model.parameters(), lr=0.001, weight_decay=1e-4)
 
@@ -318,54 +318,54 @@ with torch.no_grad():
     print("Precision:%f Recall:%f F_score:%f" % (Precision, Recall, F_score))
 # ------------------------------------------------------------------------------
 
-# MAX_EPOCH = 300
-# logger = get_logger('./log/exp.log')
-# # Make sure prepare_sequence from earlier in the LSTM section is loaded
-# for epoch in range(MAX_EPOCH):  # again, normally you would NOT do 300 epochs, it is toy data
-#     batch = 0
-#     loss = 0
-#     # 训练一轮
-#     for sentence, tags in training_data:
-#         # 第一步，梯度清零
-#         model.zero_grad()
-#         # 第二步，转换为词为张量，转换标签为张量
-#         sentence_in = prepare_sequence(sentence, word_to_ix)
-#         targets = torch.tensor([tag_to_ix[t] for t in tags], dtype=torch.long)
-#         # 第三步，前向传播
-#         loss = model.neg_log_likelihood(sentence_in, targets)
-#         model.train()
-#         # 调用optimizer.step()来计算损失函数，梯度和更新参数
-#         loss.backward()
-#         optimizer.step()
-#         # 统计信息
-#         batch += 1
-#         if batch % 100 == 0:
-#             print("epoch:%d batch:%d(%d) loss:%f" % (epoch + 1, batch, training_data.__len__(), loss))
+MAX_EPOCH = 300
+logger = get_logger('./log/exp.log')
+# Make sure prepare_sequence from earlier in the LSTM section is loaded
+for epoch in range(MAX_EPOCH):  # again, normally you would NOT do 300 epochs, it is toy data
+    batch = 0
+    loss = 0
+    # 训练一轮
+    for sentence, tags in training_data:
+        # 第一步，梯度清零
+        model.zero_grad()
+        # 第二步，转换为词为张量，转换标签为张量
+        sentence_in = prepare_sequence(sentence, word_to_ix)
+        targets = torch.tensor([tag_to_ix[t] for t in tags], dtype=torch.long)
+        # 第三步，前向传播
+        loss = model.neg_log_likelihood(sentence_in, targets)
+        model.train()
+        # 调用optimizer.step()来计算损失函数，梯度和更新参数
+        loss.backward()
+        optimizer.step()
+        # 统计信息
+        batch += 1
+        if batch % 100 == 0:
+            print("epoch:%d batch:%d(%d) loss:%f" % (epoch + 1, batch, training_data.__len__(), loss))
 #
 #     # 计算准确率、召回率以及F值
-#     num_of_all_target_tags = 0          # 原始语料中的数量
-#     num_of_all_predict_tags = 0         # 识别出的数量
-#     num_of_all_predict_true_tags = 0    # 正确识别的数量
-#     for sentence, tags in training_data:
-#         sentence_in = prepare_sequence(sentence, word_to_ix)    # 输入
-#         targets = [tag_to_ix[t] for t in tags] # 训练集中的标签
-#         for target in targets:
-#             if target != 6:
-#                 num_of_all_target_tags += 1
-#         predicts = model(sentence_in)[1]  # 预测的标签值
-#         for i in range(len(predicts)):
-#             if predicts[i] != 6:
-#                 num_of_all_predict_tags += 1
-#                 if predicts[i] == targets[i]:
-#                     num_of_all_predict_true_tags += 1
-#     Precision = num_of_all_predict_true_tags / num_of_all_predict_tags.__float__()
-#     Recall =num_of_all_predict_true_tags / num_of_all_target_tags.__float__()
-#     F_score = Precision * Recall * 2 / (Precision + Recall)
-#     print("epoch:%d batch:%d(%d) Precision:%f Recall:%f F_score:%f" % (epoch + 1, batch, training_data.__len__(), Precision, Recall, F_score))
+    num_of_all_target_tags = 0          # 原始语料中的数量
+    num_of_all_predict_tags = 0         # 识别出的数量
+    num_of_all_predict_true_tags = 0    # 正确识别的数量
+    for sentence, tags in training_data:
+        sentence_in = prepare_sequence(sentence, word_to_ix)    # 输入
+        targets = [tag_to_ix[t] for t in tags] # 训练集中的标签
+        for target in targets:
+            if target != 6:
+                num_of_all_target_tags += 1
+        predicts = model(sentence_in)[1]  # 预测的标签值
+        for i in range(len(predicts)):
+            if predicts[i] != 6:
+                num_of_all_predict_tags += 1
+                if predicts[i] == targets[i]:
+                    num_of_all_predict_true_tags += 1
+    Precision = num_of_all_predict_true_tags / num_of_all_predict_tags.__float__()
+    Recall =num_of_all_predict_true_tags / num_of_all_target_tags.__float__()
+    F_score = Precision * Recall * 2 / (Precision + Recall)
+    print("epoch:%d batch:%d(%d) Precision:%f Recall:%f F_score:%f" % (epoch + 1, batch, training_data.__len__(), Precision, Recall, F_score))
 #
 #     # 将信息输出到日志中
-#     logger.info('Epoch:[{}/{}]\t loss={:.5f}\t Precision={:.5f}\t Recall={:.5f}\t F_score={:.5f}'.format(epoch, MAX_EPOCH, float(loss), Precision, Recall, F_score))
-#     torch.save(model, "./model/model-%d.pth" % epoch)
+    logger.info('Epoch:[{}/{}]\t loss={:.5f}\t Precision={:.5f}\t Recall={:.5f}\t F_score={:.5f}'.format(epoch, MAX_EPOCH, float(loss), Precision, Recall, F_score))
+    torch.save(model, "./model/model-%d.pth" % epoch)
 #
 #
-# logger.info('finish training!')
+logger.info('finish training!')
